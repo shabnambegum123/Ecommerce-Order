@@ -17,7 +17,14 @@ const messages = {
   updatedCart:"updatedCart",
   cartNotFound:"cartNotFound",
   higher:"Higher than actual count",
-  address:"Required address"
+  address:"Required address",
+  couponUpdate:"coupon updated",
+  deleteCoupon:"coupon deleted",
+  color:"color not available",
+  size:"size not available",
+  update:"updated",
+  saved:"This product is already saved",
+  savedForLater:"This product is already saved for later"
 };
 
 

@@ -11,6 +11,13 @@ const routes = {
         createCart:"/v1/create/cart",
         getCart:"/v1/get/cart",
         updateCart:"/v1/update/Cart"
+    },
+    couponCode:{
+      createCoupon:"/v1/create/coupon",
+      updateCoupon: "/v1/update/Coupon",
+      listCoupon: "/v1/list/Coupon",
+      getByIdCoupon: "/v1/getById/Coupon",
+      deleteCoupon: "/v1/delete/Coupon"
     }
   },
 };

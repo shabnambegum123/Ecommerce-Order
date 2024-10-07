@@ -30,12 +30,12 @@ const productSchema = new mongoose.Schema({
     default: false, 
   },
   productSize:{
-    type:Array,
+    type:String,
     required: true,
     trim: true,
   },
   productColor:{
-    type:Array,
+    type:String,
     required: true,
     trim: true,
   }
@@ -55,15 +55,8 @@ const cartSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     defaule:null
   },
-  couponCode: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  couponCodeDiscount:{
-    type: Number,
-    required: true,
-  }
+  isDeleted: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true }
   
 });
 

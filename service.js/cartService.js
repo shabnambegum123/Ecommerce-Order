@@ -3,143 +3,8 @@ const { statusMessage } = require("../response/httpStatusMessage");
 const { messages } = require("../response/customMessage");
 const { getProduct, updateStock } = require("../apiService/internalService");
 const cart = require("../Database/modal/cart");
-const {generateCouponCode,generateRandomDiscount} = require("../Helpers/couponCode")
+
 const createCartService = async (params) => {
-  // try {
-  //   let Object = {
-  //     productId: params.productId,
-  //   };
-  //   const axios = await getProduct(Object);
-
-  //   console.log("axios", axios);
-
-  //   if (!axios) {
-  //     return {
-  //       status: false,
-  //       statusCode: statusCodes.HTTP_NOT_FOUND,
-  //       message: messages.productNotFound,
-  //       data: [],
-  //     };
-  //   }
-
-  //   let passData = {
-  //     productId: axios._id,
-  //     productName: axios.productName,
-  //     MRP: axios.MRP,
-  //     quantity: params.quantity,
-  //   };
-  //   let cartData = {
-  //     products: [passData],
-  //     userId: params.userId,
-  //     TotalAmount: passData.MRP * params.quantity,
-  //   };
-  //   if (params.quantity < 1) {
-  //     return {
-  //       status: false,
-  //       statusCode: statusCodes?.HTTP_BAD_REQUEST,
-  //       message: messages?.quantity,
-  //       data: [],
-  //     };
-  //   }
-  //   // if (axios.stock < params.quantity) {
-  //   //   return {
-  //   //     status: false,
-  //   //     statusCode: statusCodes?.HTTP_BAD_REQUEST,
-  //   //     message: messages?.stock,
-  //   //     data: [],
-  //   //   }
-  //   // }
-  //   let check = await cart.findOne({ userId: params.userId });
-  //   if (!check) {
-  //     let createCart = await cart.create(cartData);
-  //     if (createCart) {
-  //       return {
-  //         status: true,
-  //         statusCode: statusCodes?.HTTP_OK,
-  //         message: messages?.createCart,
-  //         data: [],
-  //       };
-  //     }
-  //   }
-
-  //   let data = check.products;
-  //   for (let i = 0; i < data.length; i++) {
-  //     let totalValue = 0;
-  //     if (data[i].productId == params.productId) {
-  //       let updateData = data.map((x) => {
-  //         if (x.productId == data[i].productId) {
-  //           x.quantity += +params.quantity;
-  //         }
-  //         totalValue += x.MRP * x.quantity;
-  //         return x;
-  //       });
-  //       console.log(updateData, "shabnam begum", totalValue);
-
-  //       let passData = { TotalAmount: totalValue, products: updateData };
-
-  //       const result = await cart.updateOne(
-  //         { userId: params.userId },
-
-  //         {
-  //           $set: passData,
-  //         }
-  //       );
-
-  //       if (result) {
-  //         let calulate = axios.stock - params.quantity;
-  //         let value = {
-  //           stock: calulate,
-  //           _id: params.productId,
-  //         };
-  //         let stock = await updateStock(value);
-  //         if (stock) {
-  //           return {
-  //             status: true,
-  //             statusCode: statusCodes?.HTTP_OK,
-  //             message: messages?.sent,
-  //             data: stock,
-  //           };
-  //         }
-  //       }
-  //     } else if (data[i].productId !== params.productId) {
-  //       let updateData = data.map((x) => {
-  //         totalValue += x.MRP * x.quantity;
-  //         return x;
-  //       });
-  //       let passData = { TotalAmount: totalValue, products: updateData };
-
-  //       const result = await cart.updateOne(
-  //         { userId: params.userId },
-
-  //         {
-  //           $push: products,
-  //           $set: passData,
-  //         }
-  //       );
-  //       let calulate = axios.stock - params.quantity;
-  //       let value = {
-  //         stock: calulate,
-  //         _id: params.productId,
-  //       };
-  //       let stock = await updateStock(value);
-  //       if (stock) {
-  //         return {
-  //           status: true,
-  //           statusCode: statusCodes?.HTTP_OK,
-  //           message: messages?.sent,
-  //           data: stock,
-  //         };
-  //       }
-  //     }
-  //   }
-  // } catch (error) {
-  //   return {
-  //     status: false,
-  //     statusCode: statusCodes?.HTTP_BAD_REQUEST,
-  //     message: error.message,
-  //   };
-  // }
-
   try {
     if (params.quantity < 1) {
       return {
@@ -153,7 +18,6 @@ const createCartService = async (params) => {
       productId: params.productId,
     };
     const axios = await getProduct(Object);
-    console.log(axios, 89887);
     if (!axios) {
       return {
         status: false,
@@ -171,74 +35,133 @@ const createCartService = async (params) => {
         data: [],
       };
     }
-    let passData = {
+    if (params.productColor) {
+      let color = params.productColor;
+      let checkColor = axios.color.includes(color);
+      if (!checkColor) {
+        return {
+          status: false,
+          statusCode: statusCodes?.HTTP_NOT_FOUND,
+          message: messages?.color,
+          data: [],
+        };
+      }
+    }
+    if (params.productSize) {
+      let size = params.productSize;
+      let checkSize = axios.size.includes(size);
+      if (!checkSize) {
+        return {
+          status: false,
+          statusCode: statusCodes?.HTTP_NOT_FOUND,
+          message: messages?.size,
+          data: [],
+        };
+      }
+    }
 
+    let passData = {
       productId: axios._id,
       productName: axios.productName,
       MRP: axios.actualPrice,
       quantity: params.quantity,
-      productSize:axios.size,
-      productColor:axios.color
-    }
+      productSize: params.productSize || axios.DefaultSize,
+      productColor: params.productColor || axios.DefaultColor,
+    };
 
-   
     let cartData = {
       products: [passData],
       userId: params.userId,
       TotalAmount: passData.MRP * params.quantity,
-      couponCode:generateCouponCode(),
-      couponCodeDiscount:generateRandomDiscount()
-
     };
 
     let checkUserExists = await cart.findOne({ userId: params.userId });
     if (checkUserExists) {
       let data = checkUserExists.products;
-      let checkProductId = data.map(async (x) => {
-        let TotalAmount = x.MRP * +params.quantity;
-        let updatedata = { products: passData, TotalAmount: TotalAmount };
-        if (x.productId == params.productId) {
-          let updateQuantity = await cart.updateOne(
-            { userId: params.userId },
 
+      const product = data.find((x) => x.productId.equals(params.productId));
+      if (product) {
+        const sizeMatch = product.productSize === params.productSize;
+        const colorMatch = product.productColor === params.productColor;
+        if (sizeMatch && colorMatch) {
+          let quantity = product.quantity + Number(params.quantity);
+          let updateValue = {
+            quantity: quantity,
+            TotalAmount:
+              checkUserExists.TotalAmount + product.MRP * +params.quantity,
+          };
+          let update = await cart.findOneAndUpdate(
+            { userId: params.userId, "products.productId": params.productId },
             {
-              $set: updatedata,
+              $set: {
+                "products.$.quantity": updateValue.quantity,
+                TotalAmount: updateValue.TotalAmount,
+              },
             }
           );
-        } else if (x.productId != params.productId) {
-          let totalValue =
-            checkUserExists.TotalAmount + passData.MRP * +params.quantity;
-          let update = { TotalAmount: totalValue };
+          if (update) {
+            return {
+              status: true,
+              statusCode: statusCodes?.HTTP_OK,
+              message: messages?.update,
+              data: [],
+            };
+          }
+        } else {
+          console.log(passData.MRP);
           let pustProduct = await cart.updateOne(
             { userId: params.userId },
             {
               $push: { products: passData },
-              $set: update,
+              $set: {
+                TotalAmount:
+                  checkUserExists.TotalAmount + passData.MRP * +params.quantity,
+              },
             }
           );
+          if (pustProduct) {
+            return {
+              status: true,
+              statusCode: statusCodes?.HTTP_OK,
+              message: messages?.update,
+              data: [],
+            };
+          }
         }
-        return x;
-      });
-      let calulate = axios.stock - params.quantity;
-      let value = {
-        stock: calulate,
-        _id: params.productId,
-      };
-      let stock = await updateStock(value);
-      if (stock) {
-        return {
-          status: true,
-          statusCode: statusCodes?.HTTP_OK,
-          message: messages?.sent,
-          data: stock,
+      } else {
+        let differenrProduct = await cart.updateOne(
+          { userId: params.userId },
+          {
+            $push: { products: passData },
+            $set: {
+              TotalAmount:
+                checkUserExists.TotalAmount + axios.MRP * +params.quantity,
+            },
+          }
+        );
+        if (differenrProduct) {
+          return {
+            status: true,
+            statusCode: statusCodes?.HTTP_OK,
+            message: messages?.update,
+            data: [],
+          };
+        }
+        let calulate = axios.stock - params.quantity;
+        let value = {
+          stock: calulate,
+          _id: params.productId,
         };
+        let stock = await updateStock(value);
+        if (stock) {
+          return {
+            status: true,
+            statusCode: statusCodes?.HTTP_OK,
+            message: messages?.sent,
+            data: stock,
+          };
+        }
       }
-      return {
-        status: true,
-        statusCode: statusCodes?.HTTP_OK,
-        message: messages?.createCart,
-        data: [],
-      };
     } else {
       let createCart = await cart.create(cartData);
       if (createCart) {
@@ -294,42 +217,54 @@ const updateCartService = async (params) => {
   if (params.isSavedLater == true) {
     let value = find.products;
     let updatedata = { isSavedLater: params.isSavedLater };
-    let map = value.map(async (x) => {
-      let totalAmount = find.TotalAmount - axios.actualPrice;
-      if (x.productId == params.productId) {
-        var update = await cart.updateOne(
-          { userId: params.userId, "products.productId": params.productId },
-          {
-            $set: {
-              "products.$.isSavedLater": updatedata.isSavedLater,
-              TotalAmount: totalAmount,
-            },
-          }
-        );
+    for (let x of value) {
+      if (x.productId.equals(params.productId)) {
+        if (x.isSavedLater === true) {
+          return {
+            status: false,
+            statusCode: statusCodes?.HTTP_BAD_REQUEST,
+            message: messages?.savedForLater,
+            data: [],
+          };
+        }
       }
 
-      return x;
-    });
+      let totalAmount = find.TotalAmount - axios.actualPrice;
+      var update = await cart.updateOne(
+        { userId: params.userId, "products.productId": params.productId },
+        {
+          $set: {
+            "products.$.isSavedLater": updatedata.isSavedLater,
+            TotalAmount: totalAmount,
+          },
+        }
+      );
+    }
   } else if (params.isSavedLater == false) {
     let value = find.products;
     let updatedata = { isSavedLater: params.isSavedLater };
-    let map = value.map(async (x) => {
+    for(let x of value){
       let totalAmount = find.TotalAmount + axios.actualPrice;
-
-      if (x.productId == params.productId) {
-        var update = await cart.updateOne(
-          { userId: params.userId, "products.productId": params.productId },
-          {
-            $set: {
-              "products.$.isSavedLater": updatedata.isSavedLater,
-              TotalAmount: totalAmount,
-            },
+        if(x.productId.equals(params.productId)){
+          if (x.isSavedLater === false) {
+            return {
+              status: false,
+              statusCode: statusCodes?.HTTP_BAD_REQUEST,
+              message: messages?.saved,
+              data: [],
+            };
           }
-        );
-      }
-
-      return x;
-    });
+          var update = await cart.updateOne(
+                { userId: params.userId, "products.productId": params.productId },
+                {
+                  $set: {
+                    "products.$.isSavedLater": updatedata.isSavedLater,
+                    TotalAmount: totalAmount,
+                  },
+                }
+              );
+        }
+    }
   }
   if (params.isRemove == true) {
     let value = find.products;
@@ -349,9 +284,8 @@ const updateCartService = async (params) => {
   }
   if (params.reduceQuantity) {
     let checkUserExists = await cart.findOne({ userId: params.userId });
-
     if (checkUserExists) {
-      let matchingProducts = [];
+      let matchingProducts = []
       let data = checkUserExists.products;
       for (let items of data) {
         if (items.productId == params.productId) {
